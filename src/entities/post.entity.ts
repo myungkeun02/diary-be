@@ -18,6 +18,6 @@ export class Entry {
   @Column({ type: 'timestamp' })
   deleted_at: Date;
 
-  @ManyToOne(() => User, user => user.entries)
-  user: User;
+  // @ManyToOne(() => User, user => user.entries)
+  // user: User;
 }

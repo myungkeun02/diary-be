@@ -1,18 +1,36 @@
 import { Injectable } from '@nestjs/common';
+import { Response } from 'express';
+
+const users = [
+  {
+    id: 'admin',
+    password: 'admin',
+  },
+  {
+    id: 'test',
+    password: 'test',
+  },
+];
 
 @Injectable()
 export class AuthService {
-  getHello(): string {
-    throw new Error('Method not implemented.');
+  login(id: string, password: string): boolean {
+    if (users.find((user) => user.id === id && user.password === password)) {
+      return true;
+    }
+    return false;
   }
-  googleLogin(req) {
-    if (!req.user) {
-      return 'No user from google'
-    }
 
-    return {
-      message: 'User information from google',
-      user: req.user
-    }
+  generateToken(data): string {
+    // generate JWT
+    return 'token';
+  }
+
+  async setCookie(jwt: string, res: Response) {
+    res.cookie('jwt', jwt, { httpOnly: true });
+  }
+
+  async removeCookie(res: Response) {
+    res.cookie('jwt', '', { httpOnly: true });
   }
 }
