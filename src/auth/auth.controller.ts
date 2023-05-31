@@ -1,31 +1,44 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Redirect,
+  Res,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthGuard } from '@nestjs/passport';
+import { LoginDto } from './dto/auth.dto';
+import { Response } from 'express';
 
-@Controller()
+@Controller('auth')
 export class AuthController {
-  getHello(): any {
-    throw new Error('Method not implemented.');
-  }
-  @Get()
-  findAll(): string {
-    return 'Main Page!';
-  }
-}
-@Controller('google')
-export class GoogleController {
-  getHello(): any {
-    throw new Error('Method not implemented.');
-  }
   constructor(private readonly authService: AuthService) {}
 
-  @Get()
-  @UseGuards(AuthGuard('google'))
-  async googleAuth(@Req() req) {}
+  // 로그인
+  @Post('login')
+  async authLogin(@Body() body: LoginDto, @Res() res: Response): Promise<any> {
+    const { id, password } = body;
 
-  @Get('redirect')
-  @UseGuards(AuthGuard('google'))
-  googleAuthRedirect(@Req() req) {
-    return this.authService.googleLogin(req)
+    const result = this.authService.login(id, password);
+
+    if (result) {
+      const jwt = this.authService.generateToken({ id });
+      await this.authService.setCookie(jwt, res);
+      Redirect('/Blog');
+    } else {
+      throw new UnauthorizedException('아이디 또는 비밀번호가 틀렸습니다.');
+    }
+  }
+
+  // 로그아웃
+  @Post('logout')
+  async authLogout(@Res() res: Response): Promise<void> {
+    await this.authService.removeCookie(res);
+  }
+
+  // 회원가입
+  @Post('signup')
+  async authSignup(): Promise<string> {
+    return 'Main Page!';
   }
 }
