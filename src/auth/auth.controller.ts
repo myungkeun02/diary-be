@@ -1,31 +1,27 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { AuthService } from './auth.service';
-import { AuthGuard } from '@nestjs/passport';
+import { FindOneOptions } from 'typeorm';
+import { LoginDto } from './dto/auth.dto';
+import { User } from 'src/entities/user.entity';
 
-@Controller()
+@Controller('auth')
 export class AuthController {
-  getHello(): any {
-    throw new Error('Method not implemented.');
-  }
-  @Get()
-  findAll(): string {
-    return 'Main Page!';
-  }
-}
-@Controller('google')
-export class GoogleController {
-  getHello(): any {
-    throw new Error('Method not implemented.');
-  }
-  constructor(private readonly authService: AuthService) {}
+  constructor(private authService: AuthService) {}
 
-  @Get()
-  @UseGuards(AuthGuard('google'))
-  async googleAuth(@Req() req) {}
+  @Post('login')
+  async login(@Body() loginDto: LoginDto, @Res() res: Response) {
+    const { email, password } = loginDto;
+    const options: FindOneOptions<User> = { where: { email } };
+    const pw: FindOneOptions<User> = { where: { password } };
+    const isAuthenticated = await this.authService.login(options, pw);
 
-  @Get('redirect')
-  @UseGuards(AuthGuard('google'))
-  googleAuthRedirect(@Req() req) {
-    return this.authService.googleLogin(req)
+    if (isAuthenticated) {
+      const jwtToken = this.authService.generateToken({ email });
+      await this.authService.setCookie(jwtToken, res);
+      return res.send('로그인 성공');
+    } else {
+      return res.send('로그인 실패');
+    }
   }
 }
