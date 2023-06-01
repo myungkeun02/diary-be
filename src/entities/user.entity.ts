@@ -19,4 +19,5 @@ export class User {
 
   @Column()
   password: string;
+  entries: any;
 }
